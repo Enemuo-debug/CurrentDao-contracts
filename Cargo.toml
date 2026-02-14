@@ -1,0 +1,9 @@
+[workspace]
+members = ["contracts/token", "contracts/escrow", "contracts/dao"]
+resolver = "2"
+
+[workspace.dependencies]
+soroban-sdk = "25.0.0"
+
+[profile.release]
+opt-level = "z"

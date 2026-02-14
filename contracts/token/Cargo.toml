@@ -1,0 +1,17 @@
+[package]
+name = "energy-token"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[profile.release]
+opt-level = "z"
+
+[features]
+default = []
+testutils = ["soroban-sdk/testutils"]

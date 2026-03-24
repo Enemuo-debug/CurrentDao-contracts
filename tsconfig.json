@@ -1,4 +1,16 @@
 {
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "rootDir": "."
+  },
+  "include": ["contracts/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout

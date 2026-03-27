@@ -12,9 +12,11 @@
     "test": "jest",
     "test:acl": "jest tests/acl/AccessControlList.test.ts",
     "test:emergency": "jest tests/emergency",
+    "test:location": "jest tests/location/LocationRegistry.test.ts",
     "test:coverage": "jest --coverage",
     "deploy:acl": "ts-node scripts/deploy_acl.ts",
     "deploy:emergency": "ts-node scripts/deploy_emergency.ts",
+    "deploy:location": "ts-node scripts/deploy_location.ts",
     "build": "tsc"
   },
   "repository": {

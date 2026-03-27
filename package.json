@@ -12,12 +12,14 @@
     "test": "jest",
     "test:acl": "jest tests/acl/AccessControlList.test.ts",
     "test:emergency": "jest tests/emergency",
-    "test:batching": "jest tests/batching/BatchProcessor.test.ts",
+    "test:fees": "jest tests/fees/FeeManager.test.ts",
     "test:coverage": "jest --coverage",
+    "lint": "echo 'Linting not configured yet'",
     "deploy:acl": "ts-node scripts/deploy_acl.ts",
     "deploy:emergency": "ts-node scripts/deploy_emergency.ts",
-    "deploy:batching": "ts-node scripts/deploy_batching.ts",
-    "build": "tsc"
+    "deploy:fees": "ts-node scripts/deploy_fees.ts",
+    "build": "tsc",
+    "verify:fees": "ts-node -e \"const { FeeSystemDeployer } = require('./scripts/deploy_fees'); const deployer = new FeeSystemDeployer({network: 'development', owner: '0xowner', treasury: '0xtreasury', validators: '0xvalidators', developers: '0xdevelopers', enableDynamicFees: true, initialNetworkCongestion: 20}); deployer.verifyDeployment({feeManager: new (require('./contracts/fees/FeeManager').FeeManager)('0xowner'), config: deployer.config, deploymentHash: 'test', timestamp: Date.now(), gasUsed: 0}).then(console.log);\""
   },
   "repository": {
     "type": "git",

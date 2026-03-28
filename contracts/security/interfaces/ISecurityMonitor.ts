@@ -69,7 +69,7 @@ export interface ISecurityMonitor {
 
   monitorContractInteraction(
     contract: string,
-    function: string,
+    functionName: string,
     actor: string,
     params: any[]
   ): Promise<SecurityCheckResult>;
@@ -397,7 +397,7 @@ export class AuditEntry {
     this.result = result;
     this.gasUsed = gasUsed;
     this.timestamp = Date.now();
-    this.blockNumber = 0; // Would be set by the blockchain
+    this.blockNumber = 0;
     this.metadata = new Map();
   }
 
@@ -431,7 +431,7 @@ export class SecurityEvent {
     this.target = target;
     this.data = data;
     this.timestamp = Date.now();
-    this.blockNumber = 0; // Would be set by the blockchain
+    this.blockNumber = 0;
     this.resolved = false;
   }
 

@@ -19,6 +19,7 @@
     "test:upgrade": "jest tests/upgrade/UpgradeManager.test.ts",
     "test:rating": "jest tests/rating/QualityRating.test.ts",
     "test:coverage": "jest --coverage",
+    "test:gas": "jest tests/gas/GasOptimizer.test.ts",
     "lint": "echo 'Linting not configured yet'",
     "deploy:acl": "ts-node scripts/deploy_acl.ts",
     "deploy:emergency": "ts-node scripts/deploy_emergency.ts",

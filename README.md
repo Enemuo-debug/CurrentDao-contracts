@@ -45,6 +45,7 @@ cargo build --target wasm32-unknown-unknown --release
 ```
 
 The compiled WASM files are in:
+
 - `target/wasm32-unknown-unknown/release/energy_token.wasm`
 - `target/wasm32-unknown-unknown/release/escrow_contract.wasm`
 - `target/wasm32-unknown-unknown/release/dao_contract.wasm`
@@ -56,6 +57,7 @@ The compiled WASM files are in:
 The Energy Token represents 1kWh of energy and is used to track energy contributions from solar panel installations.
 
 **Functions:**
+
 - `initialize(admin, decimals, name, symbol)` - Initialize the token
 - `mint(to, amount)` - Mint new tokens
 - `transfer(from, to, amount)` - Transfer tokens
@@ -68,6 +70,7 @@ The Energy Token represents 1kWh of energy and is used to track energy contribut
 The Escrow contract holds payments from contributors until the smart meter confirms energy delivery.
 
 **Functions:**
+
 - `initialize(admin)` - Initialize escrow
 - `create_escrow(sender, recipient, amount)` - Create new escrow
 - `confirm_delivery(escrow_id)` - Confirm delivery, release funds
@@ -79,6 +82,7 @@ The Escrow contract holds payments from contributors until the smart meter confi
 The DAO allows members to propose and vote on where to build new solar arrays.
 
 **Functions:**
+
 - `initialize(admin, token_address)` - Initialize DAO
 - `create_proposal(proposer, location, description, amount)` - Create proposal
 - `vote(voter, proposal_id, support)` - Vote on proposal

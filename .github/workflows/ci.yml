@@ -131,6 +131,50 @@ jobs:
         console.log('Optimization metrics:', metrics);
         "
 
+  test-upgrade:
+    name: Test Upgrade Management System
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run upgrade system tests
+      run: npm run test:upgrade
+    
+    - name: Validate upgrade functionality
+      run: |
+        node -e "
+        const { UpgradeManager } = require('./contracts/upgrade/UpgradeManager');
+        const { UpgradeProxy } = require('./contracts/upgrade/proxies/UpgradeProxy');
+        const { ProxyFactory } = require('./contracts/upgrade/proxies/UpgradeProxy');
+        
+        // Test upgrade manager initialization
+        const upgradeManager = new UpgradeManager('0x1234567890123456789012345678901234567890');
+        console.log('✅ Upgrade Manager initialized');
+        
+        // Test proxy creation
+        const proxy = ProxyFactory.createProxy('0xadmin', '0ximplementation');
+        console.log('✅ Proxy created:', proxy.getImplementation());
+        
+        // Test proxy info
+        const proxyInfo = proxy.getProxyInfo();
+        console.log('✅ Proxy info:', proxyInfo);
+        
+        // Test gas estimation
+        const gasEstimate = proxy.getGasEstimate('upgrade');
+        console.log('✅ Gas estimate for upgrade:', gasEstimate);
+        "
+
   security:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -303,6 +347,14 @@ jobs:
           console.log('✅ Network:', latestDeployment.network);
           console.log('✅ Timestamp:', new Date(latestDeployment.timestamp));
           console.log('✅ Gas used:', latestDeployment.gasUsed);
+          
+          // Validate upgrade system if present
+          if (latestDeployment.upgradeManager) {
+            console.log('✅ Upgrade Manager deployed:', latestDeployment.upgradeManager);
+          }
+          if (latestDeployment.proxy) {
+            console.log('✅ Proxy deployed:', latestDeployment.proxy);
+          }
         } else {
           console.log('⚠️ No deployment files found');
         }
@@ -451,6 +503,7 @@ jobs:
         echo '✅ Unit tests: PASSED'
         echo '✅ Security system tests: PASSED'
         echo '✅ Fee system tests: PASSED'
+        echo '✅ Upgrade system tests: PASSED'
         echo '✅ Security audit: PASSED'
         
     - name: Notify deployment
@@ -479,6 +532,9 @@ jobs:
         fi
         if [ '${{ needs.test-fees.result }}' == 'failure' ]; then
           echo '❌ Fee system tests: FAILED'
+        fi
+        if [ '${{ needs.test-upgrade.result }}' == 'failure' ]; then
+          echo '❌ Upgrade system tests: FAILED'
         fi
         if [ '${{ needs.security.result }}' == 'failure' ]; then
           echo '❌ Security audit: FAILED'

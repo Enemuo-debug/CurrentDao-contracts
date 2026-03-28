@@ -1,0 +1,23 @@
+{
+  "upgradeManager": "0x1234567890123456789012345678901234567890",
+  "proxy": "0x2345678901234567890123456789012345678901",
+  "implementation": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+  "deploymentHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+  "timestamp": 1711646400000,
+  "gasUsed": 2500000,
+  "config": {
+    "network": "development",
+    "owner": "0x1234567890123456789012345678901234567890",
+    "governance": "0x2345678901234567890123456789012345678901",
+    "security": "0x3456789012345678901234567890123456789012",
+    "proposers": ["0x4567890123456789012345678901234567890123"],
+    "executors": ["0x5678901234567890123456789012345678901234"],
+    "voters": ["0x6789012345678901234567890123456789012345"],
+    "emergencyAdmins": ["0x7890123456789012345678901234567890123456"],
+    "upgradeDelay": 3600,
+    "timelock": 0,
+    "initialImplementation": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+    "enableEmergencyPause": true,
+    "requireMultisig": false
+  }
+}

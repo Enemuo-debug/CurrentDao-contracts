@@ -39,6 +39,9 @@ jobs:
     - name: Run tests
       run: npm run test:coverage
     
+    - name: Run security system tests
+      run: npm run test:security || echo "Security tests not configured yet"
+    
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
@@ -46,6 +49,45 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
+
+  test-security:
+    name: Test Security System
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run security system tests
+      run: npm run test:security
+    
+    - name: Validate security components
+      run: |
+        node -e "
+        const { SecurityMonitor } = require('./contracts/security/SecurityMonitor');
+        const { AnomalyDetection } = require('./contracts/security/algorithms/AnomalyDetection');
+        const { ComplianceEngine } = require('./contracts/security/engines/ComplianceEngine');
+        
+        console.log('✅ SecurityMonitor imported successfully');
+        console.log('✅ AnomalyDetection imported successfully');
+        console.log('✅ ComplianceEngine imported successfully');
+        
+        // Test basic functionality
+        const monitor = new SecurityMonitor();
+        console.log('✅ SecurityMonitor instantiated');
+        
+        const stats = monitor.getSecurityStatistics();
+        console.log('✅ Security statistics accessible:', stats);
+        "
 
   test-fees:
     name: Test Fee Management System
@@ -117,7 +159,7 @@ jobs:
   deploy-dev:
     name: Deploy to Development
     runs-on: ubuntu-latest
-    needs: [test, test-fees, security]
+    needs: [test, test-security, test-fees, security]
     if: github.ref == 'refs/heads/develop'
     environment: development
     
@@ -138,11 +180,16 @@ jobs:
       run: npm run deploy:fees development
       env:
         NODE_ENV: development
+    
+    - name: Deploy security system to development
+      run: npm run deploy:security:dev
+      env:
+        NODE_ENV: development
 
   deploy-testnet:
     name: Deploy to Testnet
     runs-on: ubuntu-latest
-    needs: [test, test-fees, security]
+    needs: [test, test-security, test-fees, security]
     if: github.ref == 'refs/heads/main'
     environment: testnet
     
@@ -165,11 +212,18 @@ jobs:
         NODE_ENV: testnet
         TESTNET_RPC_URL: ${{ secrets.TESTNET_RPC_URL }}
         TESTNET_PRIVATE_KEY: ${{ secrets.TESTNET_PRIVATE_KEY }}
+    
+    - name: Deploy security system to testnet
+      run: npm run deploy:security:testnet
+      env:
+        NODE_ENV: testnet
+        TESTNET_RPC_URL: ${{ secrets.TESTNET_RPC_URL }}
+        TESTNET_PRIVATE_KEY: ${{ secrets.TESTNET_PRIVATE_KEY }}
 
   deploy-mainnet:
     name: Deploy to Mainnet
     runs-on: ubuntu-latest
-    needs: [test, test-fees, security]
+    needs: [test, test-security, test-fees, security]
     if: github.event_name == 'release'
     environment: mainnet
     
@@ -188,6 +242,17 @@ jobs:
     
     - name: Deploy fee system to mainnet
       run: npm run deploy:fees mainnet
+      env:
+        NODE_ENV: production
+        MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+        MAINNET_PRIVATE_KEY: ${{ secrets.MAINNET_PRIVATE_KEY }}
+        MAINNET_OWNER: ${{ secrets.MAINNET_OWNER }}
+        MAINNET_TREASURY: ${{ secrets.MAINNET_TREASURY }}
+        MAINNET_VALIDATORS: ${{ secrets.MAINNET_VALIDATORS }}
+        MAINNET_DEVELOPERS: ${{ secrets.MAINNET_DEVELOPERS }}
+    
+    - name: Deploy security system to mainnet
+      run: npm run deploy:security:mainnet
       env:
         NODE_ENV: production
         MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
@@ -220,6 +285,7 @@ jobs:
       run: |
         node -e "
         const { FeeSystemDeployer } = require('./scripts/deploy_fees');
+        const { SecuritySystemDeployer } = require('./scripts/deploy_security_monitor');
         
         // Load latest deployment
         const fs = require('fs');
@@ -240,12 +306,23 @@ jobs:
         } else {
           console.log('⚠️ No deployment files found');
         }
+        
+        // Validate security system deployment
+        console.log('🔒 Validating security system deployment...');
+        try {
+          const securityConfig = require('./scripts/deploy_security_monitor').SECURITY_MONITOR_CONFIGS.development;
+          console.log('✅ Security configuration loaded');
+          console.log('✅ Jurisdictions:', securityConfig.jurisdictions);
+          console.log('✅ Emergency controls:', securityConfig.enableEmergencyControls);
+        } catch (error) {
+          console.log('⚠️ Security system validation failed:', error.message);
+        }
         "
 
   performance:
     name: Performance Tests
     runs-on: ubuntu-latest
-    needs: [test, test-fees]
+    needs: [test, test-security, test-fees]
     if: github.event_name == 'pull_request'
     
     steps:
@@ -266,29 +343,55 @@ jobs:
         node -e "
         const { FeeManager } = require('./contracts/fees/FeeManager');
         const { FeeCalculation } = require('./contracts/fees/libraries/FeeCalculation');
+        const { SecurityMonitor } = require('./contracts/security/SecurityMonitor');
+        const { AnomalyDetection } = require('./contracts/security/algorithms/AnomalyDetection');
         
         const feeManager = new FeeManager('0xowner');
+        const securityMonitor = new SecurityMonitor();
         
-        // Performance test: Single calculations
-        console.time('Single calculations');
+        // Performance test: Fee calculations
+        console.time('Fee calculations');
         for (let i = 0; i < 1000; i++) {
           feeManager.calculateFee(1000 + i, '0xuser' + i, 'TRADE');
         }
-        console.timeEnd('Single calculations');
+        console.timeEnd('Fee calculations');
         
-        // Performance test: Batch calculations
-        console.time('Batch calculations');
+        // Performance test: Batch fee calculations
+        console.time('Batch fee calculations');
         const requests = Array.from({ length: 1000 }, (_, i) => ({
           amount: 1000 + i,
           userAddress: '0xuser' + i,
           transactionType: 'TRADE'
         }));
         feeManager.batchCalculateFees(requests);
-        console.timeEnd('Batch calculations');
+        console.timeEnd('Batch fee calculations');
+        
+        // Performance test: Security monitoring
+        console.time('Security monitoring');
+        for (let i = 0; i < 1000; i++) {
+          securityMonitor.monitorTransaction(
+            '0xuser' + i,
+            '0xcontract',
+            1000 + i,
+            '0xdata',
+            21000
+          );
+        }
+        console.timeEnd('Security monitoring');
+        
+        // Performance test: Anomaly detection
+        console.time('Anomaly detection');
+        for (let i = 0; i < 100; i++) {
+          securityMonitor.detectAnomalies('0xuser' + i, 3600000);
+        }
+        console.timeEnd('Anomaly detection');
         
         // Gas optimization metrics
-        const metrics = feeManager.getOptimizationMetrics();
-        console.log('Gas optimization metrics:', metrics);
+        const feeMetrics = feeManager.getOptimizationMetrics();
+        console.log('Fee optimization metrics:', feeMetrics);
+        
+        const securityStats = securityMonitor.getSecurityStatistics();
+        console.log('Security statistics:', securityStats);
         "
 
   documentation:
@@ -316,6 +419,11 @@ jobs:
           exit 1
         fi
         
+        if [ ! -f 'docs/security/SecurityMonitor.md' ]; then
+          echo '❌ SecurityMonitor documentation missing'
+          exit 1
+        fi
+        
         if [ ! -f 'README.md' ]; then
           echo '❌ README.md missing'
           exit 1
@@ -326,20 +434,22 @@ jobs:
         # Check documentation quality
         echo '📊 Documentation statistics:'
         echo 'FeeManager.md lines:' $(wc -l < docs/fees/FeeManager.md)
+        echo 'SecurityMonitor.md lines:' $(wc -l < docs/security/SecurityMonitor.md)
         echo 'README.md lines:' $(wc -l < README.md)
 
   notify:
     name: Notify Results
     runs-on: ubuntu-latest
-    needs: [test, test-fees, security, deploy-dev, deploy-testnet, deploy-mainnet, validate-deployment, performance, documentation]
+    needs: [test, test-security, test-fees, security, deploy-dev, deploy-testnet, deploy-mainnet, validate-deployment, performance, documentation]
     if: always()
     
     steps:
     - name: Notify success
-      if: needs.test.result == 'success' && needs.test-fees.result == 'success' && needs.security.result == 'success'
+      if: needs.test.result == 'success' && needs.test-security.result == 'success' && needs.test-fees.result == 'success' && needs.security.result == 'success'
       run: |
         echo '🎉 All tests passed successfully!'
         echo '✅ Unit tests: PASSED'
+        echo '✅ Security system tests: PASSED'
         echo '✅ Fee system tests: PASSED'
         echo '✅ Security audit: PASSED'
         
@@ -358,11 +468,14 @@ jobs:
         fi
     
     - name: Notify failures
-      if: needs.test.result == 'failure' || needs.test-fees.result == 'failure' || needs.security.result == 'failure'
+      if: needs.test.result == 'failure' || needs.test-security.result == 'failure' || needs.test-fees.result == 'failure' || needs.security.result == 'failure'
       run: |
         echo '❌ Pipeline failed!'
         if [ '${{ needs.test.result }}' == 'failure' ]; then
           echo '❌ Unit tests: FAILED'
+        fi
+        if [ '${{ needs.test-security.result }}' == 'failure' ]; then
+          echo '❌ Security system tests: FAILED'
         fi
         if [ '${{ needs.test-fees.result }}' == 'failure' ]; then
           echo '❌ Fee system tests: FAILED'

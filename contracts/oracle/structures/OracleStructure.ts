@@ -252,6 +252,7 @@ export class OracleConfig {
     aggregationInterval: u64;
     slashThreshold: u64;
     rewardMultiplier: u128;
+    automatedUpdates: Bool;
     
     constructor() {
         this.maxOraclesPerAsset = 10;
@@ -260,5 +261,6 @@ export class OracleConfig {
         this.aggregationInterval = 300; // 5 minutes
         this.slashThreshold = 1000; // 10%
         this.rewardMultiplier = 1000000n; // For precision
+        this.automatedUpdates = false; // Disabled by default
     }
 }

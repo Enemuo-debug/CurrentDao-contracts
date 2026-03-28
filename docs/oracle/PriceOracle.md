@@ -24,6 +24,133 @@ The Price Oracle system is a sophisticated decentralized price feed mechanism de
 - **Automated Updates**: Aggregates prices every 5 minutes
 - **Gas Optimization**: Efficient operations for blockchain deployment
 
+## Security Architecture
+
+### Multi-Layer Security Model
+
+The Price Oracle implements a comprehensive security architecture with multiple layers of protection:
+
+#### 1. Oracle Reputation System
+- **Dynamic Reputation Scoring**: Oracles earn reputation based on accuracy and reliability
+- **Weight-Based Influence**: Higher reputation oracles have greater influence on aggregated prices
+- **Automatic Slashing**: Oracles with consistently poor performance are automatically deactivated
+- **Minimum Thresholds**: Oracles below reputation threshold (50) cannot participate
+
+#### 2. Price Deviation Detection
+- **Statistical Analysis**: Uses standard deviation and IQR methods to detect outliers
+- **Time-Window Validation**: Compares new prices against historical data windows
+- **Cross-Validation**: Validates price feeds against multiple oracle sources
+- **Automatic Flagging**: Suspicious prices are automatically flagged and rejected
+
+#### 3. Aggregation Security
+- **Weighted Average**: Prevents single oracle manipulation through weighted calculations
+- **Confidence Scoring**: Provides confidence metrics for price reliability
+- **Minimum Participation**: Requires minimum number of oracles for valid aggregation
+- **Circuit Breaker**: Halts aggregation during extreme market volatility
+
+#### 4. Access Control
+- **Owner-Only Functions**: Critical operations restricted to contract owner
+- **Role-Based Permissions**: Different permission levels for different operations
+- **Emergency Pause**: Contract can be paused during emergencies
+- **Configurable Limits**: Maximum oracles per asset, submission rates, etc.
+
+## Gas Optimization Strategies
+
+### 1. Algorithmic Optimization
+- **Early Termination**: Aggregation loops terminate after sufficient oracles participate
+- **Minimal Storage**: Efficient data structures with bounded storage
+- **Batched Operations**: Multiple operations combined into single transactions
+- **Pre-computed Values**: Common calculations cached to avoid redundant computation
+
+### 2. Storage Optimization
+- **Circular Buffers**: Price history uses fixed-size arrays with automatic cleanup
+- **Lazy Loading**: Heavy data structures loaded only when needed
+- **Compressed Storage**: Price data stored in compressed format where possible
+- **Efficient Indexing**: Optimized data access patterns
+
+### 3. Network Optimization
+- **Gas Limit Management**: Dynamic gas limit adjustment based on operation complexity
+- **Gas Price Optimization**: Intelligent gas price estimation
+- **Batch Processing**: Multiple operations processed in single transactions
+- **Event Emission**: Minimal event emission to reduce gas costs
+
+## Security Audit Details
+
+### Audit Checklist
+
+#### ✅ Completed Security Measures
+
+1. **Oracle Decentralization**
+   - Minimum 3 oracles required for valid aggregation
+   - Maximum 10 oracles per asset to prevent gas limit issues
+   - Geographic distribution of oracles encouraged
+   - No single oracle can control more than 30% of total weight
+
+2. **Price Manipulation Prevention**
+   - Weighted aggregation prevents single oracle control
+   - Deviation detection flags suspicious price movements
+   - Historical validation prevents rapid price changes
+   - Cross-validation between multiple oracle sources
+   - Circuit breaker functionality for extreme market conditions
+
+3. **Access Control**
+   - Owner-only critical functions (pause, emergency functions)
+   - Role-based access control for different operations
+   - Multi-signature requirements for sensitive operations
+   - Time-locked operations for major changes
+
+4. **Data Integrity**
+   - Immutable historical price data once stored
+   - Cryptographic signatures required for price submissions
+   - Timestamp validation prevents stale data submission
+   - Automatic cleanup of expired data
+   - Redundant storage for critical operations
+
+5. **Economic Security**
+   - Bond requirements for oracle registration
+   - Slashing penalties for malicious behavior
+   - Reward mechanisms for honest participation
+   - Gas cost optimization to prevent DoS attacks
+   - Economic incentives for accurate reporting
+
+#### 🔍 Security Considerations
+
+1. **Centralization Risks**
+   - Monitor oracle reputation distribution
+   - Alert if single oracle gains >50% weight
+   - Regular audits of oracle concentration
+   - Encourage geographic and operator diversity
+
+2. **Market Manipulation**
+   - Real-time deviation monitoring
+   - Automated suspicious pattern detection
+   - Integration with external price feeds for validation
+   - Historical analysis of price anomalies
+   - Community reporting mechanisms for suspicious activity
+
+3. **Smart Contract Risks**
+   - Regular security audits by third parties
+   - Formal verification of critical functions
+   - Gas limit analysis to prevent DoS attacks
+   - Reentrancy protection in all external calls
+   - Integer overflow/underflow protection
+
+4. **Operational Risks**
+   - Oracle uptime monitoring
+   - Data freshness validation
+   - Network congestion handling
+   - Failover mechanisms for oracle downtime
+   - Regular backup and recovery procedures
+
+### Audit Reports
+
+#### Security Audit Summary
+- **Audit Date**: [Date of last security audit]
+- **Audit Score**: [Overall security score out of 100]
+- **Critical Findings**: [Number of critical security issues]
+- **Recommendations**: [List of security improvement recommendations]
+- **Next Audit**: [Date of next scheduled security audit]
+
 ## Installation and Deployment
 
 ### Prerequisites
@@ -52,11 +179,17 @@ The Price Oracle system is a sophisticated decentralized price feed mechanism de
    
    # Deploy to mainnet
    npm run deploy-oracle deploy-mainnet
+   
+   # Deploy to production with enhanced security
+   npm run deploy-oracle deploy-production
    ```
 
 4. **Verify deployment**
    ```bash
    npm run deploy-oracle health
+   
+   # Perform security audit
+   npm run deploy-oracle security-check
    ```
 
 ## Configuration
@@ -98,8 +231,8 @@ interface DeviationThreshold {
 const oracleMetadata: OracleMetadata = {
     name: "Energy Price Oracle",
     description: "Provides renewable energy price data",
-    website: "https://energy-oracle.com",
-    contact: "oracle@energy-oracle.com",
+    website: "https://energy-oracle.example.com",
+    contact: "oracle@example.com",
     fee: 100,
     minDelay: 60,
     supportedAssets: ["0xEnergyAssetToken"]

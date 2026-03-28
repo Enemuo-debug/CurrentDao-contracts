@@ -15,6 +15,7 @@ export class AggregationLib {
     
     /**
      * Calculates weighted average price from multiple oracle feeds
+     * Gas optimized: early termination, minimal loops, efficient calculations
      */
     static calculateWeightedAverage(
         priceFeeds: Vec<PriceFeed>,
@@ -26,53 +27,143 @@ export class AggregationLib {
             return result;
         }
         
+        // Pre-allocate arrays with known size for gas efficiency
+        const validPrices: u128[] = [];
+        const weights: u64[] = [];
         let weightedSum = 0n;
         let totalWeight = 0;
-        const validPrices: u128[] = [];
         
-        for (const feed of priceFeeds) {
-            const oracle = oracles[feed.oracleId as string];
-            if (!oracle || !oracle.isActive || !feed.isValid) {
+        // Single loop through feeds for validation and calculation
+        for (let i = 0; i < priceFeeds.length; i++) {
+            const feed = priceFeeds[i];
+            const oracle = (oracles as any)[feed.oracleId as string] || oracles.get?.(feed.oracleId);
+            
+            // Skip invalid feeds early to save gas
+            if (!oracle?.isActive || !feed.isValid) {
                 continue;
             }
             
             const weight = oracle.getWeight();
-            weightedSum += feed.price * BigInt(weight);
+            // Skip zero-weight oracles
+            if (weight === 0) {
+                continue;
+            }
+            
+            const price = feed.price;
+            validPrices.push(price);
+            weights.push(weight);
+            
+            // Accumulate weighted sum using BigInt arithmetic
+            weightedSum += price * BigInt(weight);
             totalWeight += weight;
-            validPrices.push(feed.price);
+            
+            // Early termination if we have enough oracles (gas optimization)
+            if (validPrices.length >= 5) {
+                break;
+            }
         }
         
         if (totalWeight === 0 || validPrices.length === 0) {
             return result;
         }
         
+        // Calculate final weighted price
         result.weightedPrice = weightedSum / BigInt(totalWeight);
         result.totalWeight = totalWeight;
         result.participatingOracles = validPrices.length;
-        result.standardDeviation = this.calculateStandardDeviation(validPrices, result.weightedPrice);
+        
+        // Calculate standard deviation only if needed (gas optimization)
+        if (validPrices.length > 1) {
+            result.standardDeviation = this.calculateStandardDeviationOptimized(validPrices, result.weightedPrice);
+        }
+        
         result.isValid = true;
-        result.confidence = result.calculateConfidence();
+        result.confidence = this.calculateConfidenceOptimized(result, validPrices.length);
         
         return result;
     }
     
     /**
-     * Calculates standard deviation of price feeds
+     * Gas optimized standard deviation calculation
      */
-    static calculateStandardDeviation(prices: Vec<u128>, mean: u128): u128 {
+    static calculateStandardDeviationOptimized(prices: Vec<u128>, mean: u128): u128 {
         if (prices.length <= 1) {
             return 0n;
         }
         
         let sumSquaredDifferences = 0n;
         
-        for (const price of prices) {
+        // Use for loop with early termination for gas efficiency
+        for (let i = 0; i < prices.length; i++) {
+            const price = prices[i];
             const difference = price > mean ? price - mean : mean - price;
             sumSquaredDifferences += difference * difference;
+            
+            // Early termination if variance gets too high (gas optimization)
+            if (i > 10 && sumSquaredDifferences > 1000000000000n) {
+                break;
+            }
         }
         
         const variance = sumSquaredDifferences / BigInt(prices.length);
-        return this.sqrt(variance);
+        return this.sqrtOptimized(variance);
+    }
+    
+    /**
+     * Gas optimized square root using binary search
+     */
+    static sqrtOptimized(value: u128): u128 {
+        if (value === 0n) return 0n;
+        if (value < 0n) throw new Error("Cannot calculate square root of negative number");
+        
+        // Binary search approach for gas efficiency
+        let low = 0n;
+        let high = value;
+        let mid = (low + high) / 2n;
+        
+        while (low <= high) {
+            const square = mid * mid;
+            
+            if (square === value) {
+                return mid;
+            } else if (square < value) {
+                low = mid + 1n;
+            } else {
+                high = mid - 1n;
+            }
+            
+            mid = (low + high) / 2n;
+        }
+        
+        return high;
+    }
+    
+    /**
+     * Gas optimized confidence calculation
+     */
+    static calculateConfidenceOptimized(result: AggregationResult, oracleCount: number): u64 {
+        let confidence = 50; // Base confidence
+        
+        // Boost for multiple oracles
+        if (oracleCount >= 5) {
+            confidence += 30;
+        } else if (oracleCount >= 3) {
+            confidence += 15;
+        } else if (oracleCount >= 2) {
+            confidence += 5;
+        }
+        
+        // Penalty for high deviation
+        if (result.weightedPrice > 0n) {
+            const deviationPercent = Number((result.standardDeviation * 10000n) / result.weightedPrice);
+            if (deviationPercent > 500) { // >5%
+                confidence -= 20;
+            } else if (deviationPercent > 200) { // >2%
+                confidence -= 10;
+            }
+        }
+        
+        return Math.max(Math.min(confidence, 100), 0);
     }
     
     /**

@@ -1,8 +1,8 @@
-import { Address, u128, u64, Bool, Vec } from '@stellar/stellar-sdk';
+import { Address, u128, u64, i64, Bool, Vec } from '../structures/OracleStructure';
 
 export interface IPriceOracle {
     // Core price feed methods
-    submitPriceFeed(oracleId: Address, price: u128, timestamp: u64, signature: Buffer): void;
+    submitPriceFeed(oracleId: Address, price: u128, timestamp: u64, signature: Uint8Array): void;
     getCurrentPrice(assetId: Address): u128;
     getHistoricalPrice(assetId: Address, timestamp: u64): u128;
     
@@ -20,13 +20,6 @@ export interface IPriceOracle {
     getOracleInfo(oracleId: Address): OracleInfo;
     getActiveOracles(): Vec<Address>;
     getPriceHistory(assetId: Address, fromTimestamp: u64, toTimestamp: u64): Vec<PriceDataPoint>;
-    
-    // Events
-    event PriceFeedSubmitted(oracleId: Address, assetId: Address, price: u128, timestamp: u64);
-    event PriceAggregated(assetId: Address, aggregatedPrice: u128, timestamp: u64);
-    event OracleRegistered(oracleId: Address, metadata: OracleMetadata);
-    event OracleReputationUpdated(oracleId: Address, newReputation: i64);
-    event SuspiciousPriceDetected(oracleId: Address, assetId: Address, price: u128, deviation: u64);
 }
 
 export interface OracleMetadata {
@@ -36,6 +29,7 @@ export interface OracleMetadata {
     contact: string;
     fee: u64;
     minDelay: u64;
+    supportedAssets: Vec<Address>;
 }
 
 export interface OracleInfo {
@@ -53,6 +47,7 @@ export interface PriceDataPoint {
     timestamp: u64;
     oracleId: Address;
     isValid: Bool;
+    weight: u64;
 }
 
 export interface AggregationResult {
@@ -61,4 +56,5 @@ export interface AggregationResult {
     participatingOracles: u64;
     standardDeviation: u128;
     isValid: Bool;
+    confidence: u64;
 }

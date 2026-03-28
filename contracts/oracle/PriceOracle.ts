@@ -363,10 +363,56 @@ export class PriceOracle implements IPriceOracle {
         const now = Date.now();
         const lastAggregation = this.lastAggregationTime[assetId as string] || 0;
         
+        // Automated aggregation every 5 minutes (300 seconds)
         if ((now - lastAggregation) >= this.config.aggregationInterval * 1000) {
             this.performAggregation(assetId);
             this.lastAggregationTime[assetId as string] = now;
+            
+            // Schedule next aggregation if automated updates are enabled
+            if (this.config.automatedUpdates) {
+                this.scheduleNextAggregation(assetId);
+            }
         }
+    }
+    
+    private scheduleNextAggregation(assetId: Address): void {
+        // In a real implementation, this would use a blockchain timer or external keeper
+        // For now, we'll use setTimeout for demonstration
+        setTimeout(() => {
+            if (!this.paused) {
+                this.checkAggregationTrigger(assetId);
+            }
+        }, this.config.aggregationInterval * 1000);
+    }
+    
+    /**
+     * Force immediate aggregation for an asset
+     */
+    forceAggregation(assetId: Address): void {
+        this.requireNotPaused();
+        this.performAggregation(assetId);
+        this.lastAggregationTime[assetId as string] = Date.now();
+    }
+    
+    /**
+     * Enable automated price updates
+     */
+    enableAutomatedUpdates(): void {
+        this.requireOwner();
+        this.config.automatedUpdates = true;
+        
+        // Start aggregation for all supported assets
+        for (const assetId in this.registry.assetOracles) {
+            this.scheduleNextAggregation(assetId as Address);
+        }
+    }
+    
+    /**
+     * Disable automated price updates
+     */
+    disableAutomatedUpdates(): void {
+        this.requireOwner();
+        this.config.automatedUpdates = false;
     }
     
     private performAggregation(assetId: Address): void {

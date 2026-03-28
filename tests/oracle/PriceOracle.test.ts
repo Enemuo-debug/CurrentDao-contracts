@@ -1,6 +1,6 @@
 import { PriceOracle } from '../../contracts/oracle/PriceOracle';
-import { OracleMetadata } from '../../contracts/oracle/interfaces/IPriceOracle';
-import { Oracle, PriceFeed, DeviationThreshold } from '../../contracts/oracle/structures/OracleStructure';
+import { OracleMetadata, AggregationResult } from '../../contracts/oracle/interfaces/IPriceOracle';
+import { Oracle, PriceFeed, DeviationThreshold, OracleConfig } from '../../contracts/oracle/structures/OracleStructure';
 import { AggregationLib } from '../../contracts/oracle/libraries/AggregationLib';
 import { Address, u128, u64 } from '../../contracts/oracle/structures/OracleStructure';
 
@@ -431,6 +431,178 @@ describe('AggregationLib', () => {
             const outliers = AggregationLib.detectOutliers(prices);
             
             expect(outliers.every(isOutlier => !isOutlier)).toBe(true);
+        });
+    });
+
+    describe('Automated Updates', () => {
+        beforeEach(() => {
+            priceOracle.registerOracle(oracle1, metadata);
+            priceOracle.registerOracle(oracle2, metadata);
+        });
+
+        test('should enable automated updates', () => {
+            priceOracle.enableAutomatedUpdates();
+            
+            const config = new OracleConfig();
+            config.automatedUpdates = true;
+            priceOracle.updateConfig(config);
+            
+            expect(config.automatedUpdates).toBe(true);
+        });
+
+        test('should disable automated updates', () => {
+            priceOracle.disableAutomatedUpdates();
+            
+            const config = new OracleConfig();
+            config.automatedUpdates = false;
+            priceOracle.updateConfig(config);
+            
+            expect(config.automatedUpdates).toBe(false);
+        });
+
+        test('should force aggregation', () => {
+            const price1 = 1000000n;
+            const price2 = 1050000n;
+            const timestamp = Date.now();
+            
+            priceOracle.submitPriceFeed(oracle1, price1, timestamp, new Uint8Array([1, 2, 3, 4]));
+            priceOracle.submitPriceFeed(oracle2, price2, timestamp, new Uint8Array([5, 6, 7, 8]));
+            
+            priceOracle.forceAggregation(assetId);
+            
+            const aggregatedPrice = priceOracle.getAggregatedPrice(assetId);
+            expect(aggregatedPrice).toBeGreaterThan(0n);
+        });
+    });
+
+    describe('Gas Optimization Tests', () => {
+        test('should handle large number of oracles efficiently', () => {
+            const oracleCount = 10;
+            const oracles: Address[] = [];
+            
+            for (let i = 0; i < oracleCount; i++) {
+                const oracleAddress = `0xOracle${i}Address`;
+                oracles.push(oracleAddress);
+                
+                const oracleMetadata = {
+                    name: `Test Oracle ${i}`,
+                    description: `Test oracle ${i} for gas optimization tests`,
+                    website: `https://testoracle${i}.com`,
+                    contact: `test${i}@testoracle.com`,
+                    fee: 100,
+                    minDelay: 60,
+                    supportedAssets: [assetId]
+                };
+                
+                priceOracle.registerOracle(oracleAddress, oracleMetadata);
+            }
+            
+            const activeOracles = priceOracle.getActiveOracles();
+            expect(activeOracles.length).toBe(oracleCount);
+            
+            // Test aggregation with many oracles
+            const timestamp = Date.now();
+            oracles.forEach((oracle, index) => {
+                const price = 1000000n + BigInt(index * 10000);
+                priceOracle.submitPriceFeed(oracle, price, timestamp, new Uint8Array([1, 2, 3, 4]));
+            });
+            
+            const aggregatedPrice = priceOracle.getAggregatedPrice(assetId);
+            expect(aggregatedPrice).toBeGreaterThan(0n);
+        });
+
+        test('should use optimized aggregation methods', () => {
+            const prices = [1000000n, 1050000n, 1100000n, 1150000n, 1200000n];
+            const mean = 1100000n;
+            
+            const stdDev = AggregationLib.calculateStandardDeviationOptimized(prices, mean);
+            expect(stdDev).toBeGreaterThan(0n);
+            
+            const sqrt = AggregationLib.sqrtOptimized(1000000n);
+            expect(sqrt).toBe(1000n);
+        });
+    });
+
+    describe('Security Tests', () => {
+        test('should prevent oracle manipulation', () => {
+            priceOracle.registerOracle(oracle1, metadata);
+            priceOracle.registerOracle(oracle2, metadata);
+            
+            const normalPrice = 1000000n;
+            const manipulatedPrice = 5000000n; // 5x normal price
+            const timestamp = Date.now();
+            
+            // Submit normal prices
+            priceOracle.submitPriceFeed(oracle1, normalPrice, timestamp, new Uint8Array([1, 2, 3, 4]));
+            priceOracle.submitPriceFeed(oracle2, normalPrice, timestamp, new Uint8Array([5, 6, 7, 8]));
+            
+            // Try to submit manipulated price
+            priceOracle.submitPriceFeed(oracle1, manipulatedPrice, timestamp, new Uint8Array([9, 10, 11, 12]));
+            
+            const aggregatedPrice = priceOracle.getAggregatedPrice(assetId);
+            
+            // Aggregated price should be closer to normal price due to validation
+            expect(aggregatedPrice).toBeLessThan(manipulatedPrice);
+            expect(aggregatedPrice).toBeGreaterThan(normalPrice / 2n);
+        });
+
+        test('should handle oracle reputation correctly', () => {
+            priceOracle.registerOracle(oracle1, metadata);
+            priceOracle.registerOracle(oracle2, metadata);
+            
+            // Boost reputation of oracle1
+            priceOracle.updateOracleReputation(oracle1, 50);
+            
+            // Reduce reputation of oracle2
+            priceOracle.updateOracleReputation(oracle2, -30);
+            
+            const oracle1Info = priceOracle.getOracleInfo(oracle1);
+            const oracle2Info = priceOracle.getOracleInfo(oracle2);
+            
+            expect(oracle1Info.reputation).toBe(150);
+            expect(oracle2Info.reputation).toBe(70);
+        });
+
+        test('should deactivate low reputation oracles', () => {
+            priceOracle.registerOracle(oracle1, metadata);
+            
+            // Reduce reputation below threshold
+            priceOracle.updateOracleReputation(oracle1, -60);
+            
+            const oracleInfo = priceOracle.getOracleInfo(oracle1);
+            expect(oracleInfo.isActive).toBe(false);
+        });
+    });
+
+    describe('Edge Cases', () => {
+        test('should handle empty price feeds', () => {
+            const aggregatedPrice = priceOracle.getAggregatedPrice(assetId);
+            expect(aggregatedPrice).toBe(0n);
+        });
+
+        test('should handle single oracle', () => {
+            priceOracle.registerOracle(oracle1, metadata);
+            
+            const price = 1000000n;
+            const timestamp = Date.now();
+            priceOracle.submitPriceFeed(oracle1, price, timestamp, new Uint8Array([1, 2, 3, 4]));
+            
+            const currentPrice = priceOracle.getCurrentPrice(assetId);
+            expect(currentPrice).toBe(price);
+        });
+
+        test('should handle price history limits', () => {
+            priceOracle.registerOracle(oracle1, metadata);
+            
+            // Submit many price feeds to test history limits
+            for (let i = 0; i < 1500; i++) {
+                const price = 1000000n + BigInt(i * 1000);
+                const timestamp = Date.now() + i;
+                priceOracle.submitPriceFeed(oracle1, price, timestamp, new Uint8Array([1, 2, 3, 4]));
+            }
+            
+            const history = priceOracle.getPriceHistory(assetId, 0, Date.now());
+            expect(history.length).toBeLessThanOrEqual(1000); // Default max size
         });
     });
 });

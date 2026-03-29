@@ -13,8 +13,8 @@ export class TimelockLib {
      * Hashes operation details to generate a unique ID.
      */
     public static hash(target: string, value: number, data: string, predecessor: string, salt: string): string {
-        // Mock hash generation
-        return `OP_HASH_${target.slice(0, 6)}_${value}_${salt.slice(0, 4)}_${Date.now()}`;
+        // Deterministic mock hash generation
+        return `OP_HASH_${target.slice(0, 10)}_${value}_${data.slice(0, 10)}_${predecessor.slice(0, 10)}_${salt.slice(0, 10)}`;
     }
 
     /**

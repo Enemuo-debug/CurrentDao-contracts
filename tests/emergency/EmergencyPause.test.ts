@@ -191,7 +191,7 @@ describe('EmergencyPause', () => {
     });
 
     it('should resume operations with sufficient signatures', async () => {
-      const signatures = ['sig1', 'sig2', 'sig3'];
+      const signatures = [governanceMembers[0], governanceMembers[1], governanceMembers[2]];
       
       await emergencyPause.resumeOperations(
         PauseLevel.SELECTIVE,
@@ -204,7 +204,7 @@ describe('EmergencyPause', () => {
     });
 
     it('should reject resume with insufficient signatures', async () => {
-      const signatures = ['sig1']; // Less than required
+      const signatures = [governanceMembers[0]]; // Less than required
       
       await expect(
         emergencyPause.resumeOperations(
@@ -219,7 +219,7 @@ describe('EmergencyPause', () => {
       // First resume
       await emergencyPause.resumeOperations(
         PauseLevel.SELECTIVE,
-        ['sig1', 'sig2', 'sig3'],
+        [governanceMembers[0], governanceMembers[1], governanceMembers[2]],
         'proof'
       );
 
@@ -227,7 +227,7 @@ describe('EmergencyPause', () => {
       await expect(
         emergencyPause.resumeOperations(
           PauseLevel.SELECTIVE,
-          ['sig1', 'sig2', 'sig3'],
+          [governanceMembers[0], governanceMembers[1], governanceMembers[2]],
           'proof'
         )
       ).rejects.toThrow('Validation failed');
@@ -254,12 +254,17 @@ describe('EmergencyPause', () => {
         ['0x1111111111111111111111111111111111111111']
       );
 
-      // Wait for auto-resume time (in real implementation)
-      // For testing, we'll manually trigger
-      await emergencyPause.triggerAutoResume();
+      // Wait for auto-resume time (mocking Date.now)
+      const realDateNow = Date.now;
+      Date.now = jest.fn(() => realDateNow() + 2000);
 
-      const status = await emergencyPause.getPauseStatus();
-      expect(status.isActive).toBe(false);
+      try {
+        await emergencyPause.triggerAutoResume();
+        const status = await emergencyPause.getPauseStatus();
+        expect(status.isActive).toBe(false);
+      } finally {
+        Date.now = realDateNow;
+      }
     });
 
     it('should reject auto-resume when conditions not met', async () => {
@@ -363,7 +368,7 @@ describe('EmergencyPause', () => {
     describe('addGovernanceMember', () => {
       it('should add new governance member', async () => {
         const newMember = '0x1111111111111111111111111111111111111111';
-        const signatures = ['sig1', 'sig2', 'sig3'];
+        const signatures = [governanceMembers[0], governanceMembers[1], governanceMembers[2]];
         
         await emergencyPause.addGovernanceMember(newMember, signatures);
         
@@ -375,7 +380,7 @@ describe('EmergencyPause', () => {
     describe('removeGovernanceMember', () => {
       it('should remove governance member', async () => {
         const memberToRemove = governanceMembers[0];
-        const signatures = ['sig1', 'sig2', 'sig3'];
+        const signatures = [governanceMembers[1], governanceMembers[2], governanceMembers[3]];
         
         await emergencyPause.removeGovernanceMember(memberToRemove, signatures);
         
@@ -386,7 +391,7 @@ describe('EmergencyPause', () => {
 
     describe('validateGovernanceAction', () => {
       it('should validate governance action with sufficient signatures', async () => {
-        const signatures = ['sig1', 'sig2', 'sig3'];
+        const signatures = [governanceMembers[0], governanceMembers[1], governanceMembers[2]];
         
         const isValid = await emergencyPause.validateGovernanceAction(
           GovernanceAction.UPDATE_CONFIG,
@@ -397,7 +402,7 @@ describe('EmergencyPause', () => {
       });
 
       it('should reject governance action with insufficient signatures', async () => {
-        const signatures = ['sig1'];
+        const signatures = [governanceMembers[0]];
         
         const isValid = await emergencyPause.validateGovernanceAction(
           GovernanceAction.UPDATE_CONFIG,
@@ -415,7 +420,7 @@ describe('EmergencyPause', () => {
         ...testConfig,
         requiredSignatures: 4
       };
-      const signatures = ['sig1', 'sig2', 'sig3', 'sig4'];
+      const signatures = [governanceMembers[0], governanceMembers[1], governanceMembers[2], governanceMembers[3]];
       
       await emergencyPause.updateEmergencyConfig(newConfig, signatures);
       
@@ -428,7 +433,7 @@ describe('EmergencyPause', () => {
         ...testConfig,
         requiredSignatures: 4
       };
-      const signatures = ['sig1', 'sig2']; // Insufficient
+      const signatures = [governanceMembers[0], governanceMembers[1]]; // Insufficient
       
       await expect(
         emergencyPause.updateEmergencyConfig(newConfig, signatures)

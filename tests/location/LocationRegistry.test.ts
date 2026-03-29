@@ -25,6 +25,9 @@ describe('LocationRegistry', () => {
         locationRegistry = new LocationRegistry();
         testOwner = 'test_owner_123';
         testVerifier = 'test_verifier_456';
+        
+        // Setup verifier
+        locationRegistry.addVerifier(testVerifier, 'test_verifier_456');
     });
 
     describe('Location Registration', () => {

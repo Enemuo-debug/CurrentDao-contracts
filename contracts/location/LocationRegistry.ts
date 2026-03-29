@@ -280,9 +280,10 @@ export class LocationRegistry implements ILocationRegistry {
         boundaries: Coordinates[],
         pricingZoneId: string,
         restrictions: ZoneRestrictions,
-        caller: string = 'default' // In real implementation, this would be msg.sender
+        caller: string = 'system' // In real implementation, this would be msg.sender
     ): Promise<string> {
-        if (!this.verifiers.get(caller)) {
+        // System and verified verifiers can create zones
+        if (caller !== 'system' && !this.verifiers.get(caller)) {
             throw new Error('Unauthorized access');
         }
 

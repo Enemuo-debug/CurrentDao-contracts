@@ -18,6 +18,7 @@ describe('Governance Contract Tests', () => {
         
         // Setup initial tokens
         token.grantMinterRole(admin, admin);
+        token.grantBurnerRole(admin, admin);
         token.mint(admin, user1, 1000); // Proposer threshold is 100
         token.mint(admin, user2, 100);  // 10 votes (QV)
         token.mint(admin, user3, 400);  // 20 votes (QV)

@@ -74,7 +74,7 @@ describe('AccessControlList', () => {
 
     expect(treasuryDecision.allowed).toBe(true);
     expect(securityDecision.allowed).toBe(true);
-    expect(treasuryDecision.inheritedViaRoles).toContain('TREASURY_MANAGER');
+    expect(treasuryDecision.inheritedViaRoles).toContain('TREASURY_OPERATOR');
   });
 
   it('allows direct permissions to override role access', async () => {

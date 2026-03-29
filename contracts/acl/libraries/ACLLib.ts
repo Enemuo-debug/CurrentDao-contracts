@@ -117,20 +117,26 @@ export class ACLLib {
     roles: Map<string, RoleDefinition>,
     visited: Set<string> = new Set()
   ): string[] {
-    if (visited.has(roleId)) {
+    const normalizedId = this.normalizeId(roleId);
+    if (visited.has(normalizedId)) {
       return [];
     }
 
-    const role = roles.get(roleId);
+    const role = roles.get(normalizedId);
     if (!role) {
       return [];
     }
 
-    visited.add(roleId);
+    visited.add(normalizedId);
 
-    const lineage = [roleId];
+    const lineage: string[] = [normalizedId];
     for (const parentId of role.parentRoleIds) {
-      lineage.push(...this.collectRoleLineage(parentId, roles, visited));
+      const parentLineage = this.collectRoleLineage(parentId, roles, visited);
+      for (const id of parentLineage) {
+        if (!lineage.includes(id)) {
+          lineage.push(id);
+        }
+      }
     }
 
     return lineage;

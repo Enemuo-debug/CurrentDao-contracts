@@ -4,11 +4,40 @@ Smart contracts for the CurrentDao solar energy ecosystem on Stellar/Soroban.
 
 ## Overview
 
-This project contains three main smart contracts:
+This project contains comprehensive smart contracts for energy trading:
 
 1. **Energy Token ($WATT)** - A custom token representing 1kWh of energy
-2. **Escrow Contract** - Holds payment until smart meter confirms energy delivery
+2. **Energy Trading Escrow** - Secure escrow system for energy trades with dispute resolution
 3. **DAO Contract** - Allows members to vote on where to build new solar arrays
+4. **Security & Access Control** - Comprehensive security framework
+5. **Fee Management** - Dynamic fee system for network operations
+6. **Emergency Systems** - Emergency response and recovery mechanisms
+
+## 🚀 New Feature: Energy Trading Escrow System
+
+We've implemented a comprehensive **Energy Trading Escrow System** that provides:
+
+### Key Features
+- **Multi-party Escrow**: Buyer, seller, and mediator roles
+- **Time-based Auto-release**: Automatic token release after 48 hours
+- **Dispute Resolution**: Admin arbitration with penalty system
+- **Milestone Trading**: Partial releases for milestone-based deliveries
+- **Emergency Recovery**: Multi-signature emergency release mechanisms
+- **Comprehensive Audit Trail**: Complete transaction history tracking
+- **Security Protection**: Reentrancy guards, rate limiting, input validation
+- **Gas Optimization**: Efficient batch operations
+
+### Quick Start
+```bash
+# Deploy the escrow system
+npm run deploy:escrow development
+
+# Run tests
+npm run test:escrow
+
+# View documentation
+cat docs/escrow/EnergyEscrow.md
+```
 
 ## Project Structure
 

@@ -20,6 +20,8 @@ export interface UpgradeProposal {
   requiredApprovals: number;
   migrationPlan: MigrationPlan;
   rollbackData?: string;
+  executionTime?: number;
+  gasUsed?: number;
 }
 
 export interface Vote {

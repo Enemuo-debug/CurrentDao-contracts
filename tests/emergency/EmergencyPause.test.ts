@@ -1,8 +1,6 @@
-import { 
-  EmergencyPause,
-  EmergencyGovernance,
-  EmergencyLib
-} from '../../contracts/emergency';
+import { EmergencyPause } from '../../contracts/emergency/EmergencyPause';
+import { EmergencyGovernance } from '../../contracts/emergency/governance/EmergencyGovernance';
+import { EmergencyLib } from '../../contracts/emergency/libraries/EmergencyLib';
 import { 
   PauseLevel, 
   EmergencyConfig,
@@ -29,9 +27,9 @@ describe('EmergencyPause', () => {
       ...DEFAULT_EMERGENCY_CONFIG,
       governanceMembers,
       criticalContracts: [
-        '0xcontract1',
-        '0xcontract2',
-        '0xcontract3'
+        '0x1111111111111111111111111111111111111111',
+        '0x2222222222222222222222222222222222222222',
+        '0x3333333333333333333333333333333333333333'
       ]
     };
 
@@ -65,7 +63,7 @@ describe('EmergencyPause', () => {
 
   describe('emergencyPause', () => {
     it('should initiate emergency pause at SELECTIVE level', async () => {
-      const affectedContracts = ['0xcontract1', '0xcontract2'];
+      const affectedContracts = ['0x1111111111111111111111111111111111111111', '0x2222222222222222222222222222222222222222'];
       
       await emergencyPause.emergencyPause(
         PauseLevel.SELECTIVE,
@@ -125,7 +123,7 @@ describe('EmergencyPause', () => {
           PauseLevel.SELECTIVE,
           '',
           3600,
-          ['0xcontract1']
+          ['0x1111111111111111111111111111111111111111']
         )
       ).rejects.toThrow('Validation failed');
     });
@@ -136,7 +134,7 @@ describe('EmergencyPause', () => {
           PauseLevel.SELECTIVE,
           'Valid reason',
           10000, // Exceeds max duration for SELECTIVE
-          ['0xcontract1']
+          ['0x1111111111111111111111111111111111111111']
         )
       ).rejects.toThrow('Validation failed');
     });
@@ -157,7 +155,7 @@ describe('EmergencyPause', () => {
         PauseLevel.SELECTIVE,
         'First pause',
         3600,
-        ['0xcontract1']
+        ['0x1111111111111111111111111111111111111111']
       );
 
       await expect(
@@ -165,7 +163,7 @@ describe('EmergencyPause', () => {
           PauseLevel.SELECTIVE,
           'Second pause',
           3600,
-          ['0xcontract2']
+          ['0x2222222222222222222222222222222222222222']
         )
       ).rejects.toThrow(EmergencyPauseError.EMERGENCY_ALREADY_ACTIVE);
     });
@@ -188,7 +186,7 @@ describe('EmergencyPause', () => {
         PauseLevel.SELECTIVE,
         'Test pause',
         3600,
-        ['0xcontract1']
+        ['0x1111111111111111111111111111111111111111']
       );
     });
 
@@ -253,7 +251,7 @@ describe('EmergencyPause', () => {
         PauseLevel.SELECTIVE,
         'Test pause',
         1, // 1 second duration
-        ['0xcontract1']
+        ['0x1111111111111111111111111111111111111111']
       );
 
       // Wait for auto-resume time (in real implementation)
@@ -269,7 +267,7 @@ describe('EmergencyPause', () => {
         PauseLevel.SELECTIVE,
         'Test pause',
         3600, // Long duration
-        ['0xcontract1']
+        ['0x1111111111111111111111111111111111111111']
       );
 
       await expect(
@@ -284,22 +282,22 @@ describe('EmergencyPause', () => {
         PauseLevel.SELECTIVE,
         'Test pause',
         3600,
-        ['0xcontract1']
+        ['0x1111111111111111111111111111111111111111']
       );
 
-      const isPaused = await emergencyPause.isContractPaused('0xcontract1');
+      const isPaused = await emergencyPause.isContractPaused('0x1111111111111111111111111111111111111111');
       expect(isPaused).toBe(true);
     });
 
     it('should return false for non-paused contracts', async () => {
-      const isPaused = await emergencyPause.isContractPaused('0xcontract1');
+      const isPaused = await emergencyPause.isContractPaused('0x1111111111111111111111111111111111111111');
       expect(isPaused).toBe(false);
     });
   });
 
   describe('getAffectedContracts', () => {
     it('should return affected contracts for SELECTIVE level', async () => {
-      const affectedContracts = ['0xcontract1', '0xcontract2'];
+      const affectedContracts = ['0x1111111111111111111111111111111111111111', '0x2222222222222222222222222222222222222222'];
       await emergencyPause.emergencyPause(
         PauseLevel.SELECTIVE,
         'Test pause',
@@ -335,7 +333,7 @@ describe('EmergencyPause', () => {
         PauseLevel.SELECTIVE,
         'Test pause',
         3600,
-        ['0xcontract1']
+        ['0x1111111111111111111111111111111111111111']
       );
 
       const analytics = await emergencyPause.getPauseAnalytics();
@@ -364,7 +362,7 @@ describe('EmergencyPause', () => {
   describe('Governance Operations', () => {
     describe('addGovernanceMember', () => {
       it('should add new governance member', async () => {
-        const newMember = '0xnewmember123456789012345678901234567890';
+        const newMember = '0x1111111111111111111111111111111111111111';
         const signatures = ['sig1', 'sig2', 'sig3'];
         
         await emergencyPause.addGovernanceMember(newMember, signatures);
@@ -440,7 +438,7 @@ describe('EmergencyPause', () => {
 
   describe('Utility Methods', () => {
     it('should get contract pause state', () => {
-      const state = emergencyPause.getContractPauseState('0xcontract1');
+      const state = emergencyPause.getContractPauseState('0x1111111111111111111111111111111111111111');
       expect(state).toBeUndefined(); // No pause initiated yet
     });
 
@@ -483,7 +481,7 @@ describe('EmergencyGovernance', () => {
 
     it('should reject insufficient members', () => {
       expect(() => {
-        new EmergencyGovernance(['0x123'], 2);
+        new EmergencyGovernance(['0x1234567890123456789012345678901234567890'], 2);
       }).toThrow('Minimum 3 governance members required');
     });
 
@@ -502,12 +500,12 @@ describe('EmergencyGovernance', () => {
         members[0],
         undefined,
         undefined,
-        '0xnewmember'
+        '0x1111111111111111111111111111111111111111'
       );
 
       expect(proposal.action).toBe(GovernanceAction.ADD_MEMBER);
       expect(proposal.proposer).toBe(members[0]);
-      expect(proposal.targetMember).toBe('0xnewmember');
+      expect(proposal.targetMember).toBe('0x1111111111111111111111111111111111111111');
       expect(proposal.executed).toBe(false);
     });
 
@@ -515,10 +513,10 @@ describe('EmergencyGovernance', () => {
       expect(() => {
         governance.createProposal(
           GovernanceAction.ADD_MEMBER,
-          '0xnonmember',
+          '0x1111111111111111111111111111111111111111',
           undefined,
           undefined,
-          '0xnewmember'
+          '0x2222222222222222222222222222222222222222'
         );
       }).toThrow(EmergencyPauseError.UNAUTHORIZED_GOVERNANCE_ACTION);
     });
@@ -533,7 +531,7 @@ describe('EmergencyGovernance', () => {
         members[0],
         undefined,
         undefined,
-        '0xnewmember'
+        '0x1111111111111111111111111111111111111111'
       );
       proposalId = proposal.id;
     });
@@ -555,7 +553,7 @@ describe('EmergencyGovernance', () => {
 
     it('should reject signature from non-member', () => {
       expect(() => {
-        governance.signProposal(proposalId, '0xnonmember', 'sig1');
+        governance.signProposal(proposalId, '0x1111111111111111111111111111111111111111', 'sig1');
       }).toThrow(EmergencyPauseError.UNAUTHORIZED_GOVERNANCE_ACTION);
     });
   });
@@ -566,7 +564,7 @@ describe('EmergencyGovernance', () => {
     });
 
     it('should return false for non-members', () => {
-      expect(governance.isGovernanceMember('0xnonmember')).toBe(false);
+      expect(governance.isGovernanceMember('0x1111111111111111111111111111111111111111')).toBe(false);
     });
   });
 
@@ -585,7 +583,7 @@ describe('EmergencyGovernance', () => {
 describe('EmergencyLib', () => {
   const config: EmergencyConfig = {
     ...DEFAULT_EMERGENCY_CONFIG,
-    governanceMembers: ['0x123', '0x456', '0x789']
+    governanceMembers: ['0x1234567890123456789012345678901234567890', '0x2345678901234567890123456789012345678901', '0x3456789012345678901234567890123456789012']
   };
 
   describe('validatePauseRequest', () => {
@@ -594,7 +592,7 @@ describe('EmergencyLib', () => {
         PauseLevel.SELECTIVE,
         'Valid reason',
         3600,
-        ['0xcontract1'],
+        ['0x1111111111111111111111111111111111111111'],
         config
       );
 
@@ -607,7 +605,7 @@ describe('EmergencyLib', () => {
         PauseLevel.NONE,
         'Valid reason',
         3600,
-        ['0xcontract1'],
+        ['0x1111111111111111111111111111111111111111'],
         config
       );
 
@@ -620,7 +618,7 @@ describe('EmergencyLib', () => {
         PauseLevel.SELECTIVE,
         '',
         3600,
-        ['0xcontract1'],
+        ['0x1111111111111111111111111111111111111111'],
         config
       );
 
@@ -633,7 +631,7 @@ describe('EmergencyLib', () => {
         PauseLevel.SELECTIVE,
         'Valid reason',
         10000,
-        ['0xcontract1'],
+        ['0x1111111111111111111111111111111111111111'],
         config
       );
 
@@ -649,8 +647,8 @@ describe('EmergencyLib', () => {
       startTime: Math.floor(Date.now() / 1000) - 3600,
       duration: 3600,
       reason: 'Test pause',
-      initiator: '0x123',
-      affectedContracts: ['0xcontract1'],
+      initiator: '0x1234567890123456789012345678901234567890',
+      affectedContracts: ['0x1111111111111111111111111111111111111111'],
       autoResumeTime: 0,
       lastUpdateTime: Math.floor(Date.now() / 1000) - 3600
     };
@@ -691,7 +689,7 @@ describe('EmergencyLib', () => {
         startTime: pastTime - 3600,
         duration: 3600,
         reason: 'Test',
-        initiator: '0x123',
+        initiator: '0x1234567890123456789012345678901234567890',
         affectedContracts: [],
         autoResumeTime: pastTime,
         lastUpdateTime: pastTime
@@ -709,7 +707,7 @@ describe('EmergencyLib', () => {
         startTime: Math.floor(Date.now() / 1000) - 100,
         duration: 3600,
         reason: 'Test',
-        initiator: '0x123',
+        initiator: '0x1234567890123456789012345678901234567890',
         affectedContracts: [],
         autoResumeTime: futureTime,
         lastUpdateTime: Math.floor(Date.now() / 1000) - 100
@@ -730,8 +728,8 @@ describe('EmergencyLib', () => {
           endTime: Math.floor(Date.now() / 1000) - 3600,
           duration: 3600,
           reason: 'Security threat',
-          initiator: '0x123',
-          affectedContracts: ['0xcontract1'],
+          initiator: '0x1234567890123456789012345678901234567890',
+          affectedContracts: ['0x1111111111111111111111111111111111111111'],
           resumeSignatures: ['sig1', 'sig2'],
           autoResumed: false,
           gasUsed: 50000
@@ -766,8 +764,8 @@ describe('EmergencyLib', () => {
     });
 
     it('should generate pause event ID', () => {
-      const id = EmergencyLib.generatePauseEventId(PauseLevel.SELECTIVE, '0x123');
-      expect(id).toContain('pause_1_0x123');
+      const id = EmergencyLib.generatePauseEventId(PauseLevel.SELECTIVE, '0x1234567890123456789012345678901234567890');
+      expect(id).toContain('pause_1_0x1234567890123456789012345678901234567890');
       expect(typeof id).toBe('string');
     });
 

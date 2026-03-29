@@ -7,11 +7,9 @@
 import { 
   AnomalyType, 
   DetectedAnomaly, 
-  AnomalyDetectionResult,
-  TransactionPattern,
-  TokenTransfer,
-  VotingPattern
+  AnomalyDetectionResult
 } from '../interfaces/ISecurityMonitor';
+import { TransactionPattern, TokenTransfer, VotingPattern } from '../libraries/SecurityLib';
 
 export class AnomalyDetection {
   private static readonly DEFAULT_CONFIDENCE_THRESHOLD = 0.7;
@@ -28,7 +26,7 @@ export class AnomalyDetection {
   static detectStatisticalAnomalies(
     address: string,
     transactionHistory: TransactionPattern[],
-    timeWindow: number = TIME_WINDOWS.LONG
+    timeWindow: number = AnomalyDetection.TIME_WINDOWS.LONG
   ): AnomalyDetectionResult {
     const now = Date.now();
     const recentTransactions = transactionHistory.filter(
@@ -113,7 +111,7 @@ export class AnomalyDetection {
 
     // Analyze call patterns
     const addressCalls = callHistory.get(address) || [];
-    const recentCalls = addressCalls.filter(timestamp => now - timestamp < TIME_WINDOWS.SHORT);
+    const recentCalls = addressCalls.filter(timestamp => now - timestamp < AnomalyDetection.TIME_WINDOWS.SHORT);
     
     if (recentCalls.length > 100) {
       anomalies.push(new DetectedAnomaly(
@@ -221,7 +219,7 @@ export class AnomalyDetection {
 
     // Check for external call patterns that suggest reentrancy
     const recentTransactions = transactionHistory.filter(
-      tx => Date.now() - tx.timestamp < TIME_WINDOWS.SHORT
+      tx => Date.now() - tx.timestamp < AnomalyDetection.TIME_WINDOWS.SHORT
     );
 
     // Look for multiple calls to the same contract in quick succession
@@ -284,7 +282,7 @@ export class AnomalyDetection {
       // Check for rapid successive updates
       const recentUpdates = oracleUpdates.filter(u => 
         u.token === update.token && 
-        update.timestamp - u.timestamp < TIME_WINDOWS.VERY_SHORT &&
+        update.timestamp - u.timestamp < AnomalyDetection.TIME_WINDOWS.VERY_SHORT &&
         u.timestamp !== update.timestamp
       );
 
@@ -359,7 +357,7 @@ export class AnomalyDetection {
       // Check for last-minute voting
       const votingDeadline = proposal.deadline;
       const lastMinuteVotes = votes.filter(v => 
-        votingDeadline - v.timestamp < TIME_WINDOWS.VERY_SHORT
+        votingDeadline - v.timestamp < AnomalyDetection.TIME_WINDOWS.VERY_SHORT
       );
 
       if (lastMinuteVotes.length > votes.length * 0.3) {

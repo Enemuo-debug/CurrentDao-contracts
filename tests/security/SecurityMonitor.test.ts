@@ -4,10 +4,10 @@
  * @dev Tests all security features including monitoring, anomaly detection, and compliance
  */
 
-import { SecurityMonitor } from '../contracts/security/SecurityMonitor';
-import { SecurityLib } from '../contracts/security/libraries/SecurityLib';
-import { AnomalyDetection } from '../contracts/security/algorithms/AnomalyDetection';
-import { ComplianceEngine } from '../contracts/security/engines/ComplianceEngine';
+import { SecurityMonitor } from '../../contracts/security/SecurityMonitor';
+import { SecurityLib, TransactionPattern, TokenTransfer } from '../../contracts/security/libraries/SecurityLib';
+import { AnomalyDetection } from '../../contracts/security/algorithms/AnomalyDetection';
+import { ComplianceEngine, KYCRecord } from '../../contracts/security/engines/ComplianceEngine';
 import {
   SecuritySeverity,
   AnomalyType,
@@ -17,7 +17,7 @@ import {
   ComplianceContext,
   ReportingPeriod,
   EmergencyScope
-} from '../contracts/security/interfaces/ISecurityMonitor';
+} from '../../contracts/security/interfaces/ISecurityMonitor';
 
 describe('SecurityMonitor', () => {
   let securityMonitor: SecurityMonitor;

@@ -23,11 +23,11 @@ export class ScoringLib {
         const availabilityScore = BigInt(this.calculateAvailabilityScore(metrics.availability));
 
         // Weighted average calculation (all values in basis points)
-        const renewableWeight = Number(weights.renewableWeight);
-        const carbonWeight = Number(weights.carbonWeight);
-        const reliabilityWeight = Number(weights.reliabilityWeight);
-        const efficiencyWeight = Number(weights.efficiencyWeight);
-        const availabilityWeight = Number(weights.availabilityWeight);
+        const renewableWeight = BigInt(weights.renewableWeight);
+        const carbonWeight = BigInt(weights.carbonWeight);
+        const reliabilityWeight = BigInt(weights.reliabilityWeight);
+        const efficiencyWeight = BigInt(weights.efficiencyWeight);
+        const availabilityWeight = BigInt(weights.availabilityWeight);
         
         const weightedSum = 
             (renewableScore * renewableWeight) +
@@ -36,7 +36,7 @@ export class ScoringLib {
             (efficiencyScore * efficiencyWeight) +
             (availabilityScore * availabilityWeight);
 
-        return BigInt(Math.floor(weightedSum / 10000)); // Divide by total weight (100%)
+        return weightedSum / 10000n; // Divide by total weight (100%)
     }
 
     /**

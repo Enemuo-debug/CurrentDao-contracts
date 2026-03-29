@@ -1,10 +1,12 @@
-import { UsageAnalytics } from '../contracts/analytics/UsageAnalytics';
-import { AnalyticsLib } from '../contracts/analytics/libraries/AnalyticsLib';
+import { UsageAnalytics } from '../../contracts/analytics/UsageAnalytics';
+import { AnalyticsLib } from '../../contracts/analytics/libraries/AnalyticsLib';
 import { 
     PrivacySettings, 
     DEFAULT_PRIVACY_SETTINGS,
-    AnalyticsConfiguration 
-} from '../contracts/analytics/structures/UsageStructure';
+    AnalyticsConfiguration,
+    AnalyticsReport,
+    OptimizationSuggestion
+} from '../../contracts/analytics/structures/UsageStructure';
 
 describe('UsageAnalytics', () => {
     let analytics: UsageAnalytics;
@@ -96,7 +98,7 @@ describe('UsageAnalytics', () => {
 
         test('should emit usage recorded events', () => {
             const events: any[] = [];
-            analytics.onUsageRecorded = (event) => events.push(event);
+            analytics.onUsageRecorded = (event: { anonymizedUserId: string; contractAddress: string; functionName: string; timestamp: number }) => events.push(event);
             
             analytics.recordUsage(user1, contract1, 'mint', 50000, 1000, 12345);
             
@@ -172,7 +174,7 @@ describe('UsageAnalytics', () => {
 
         test('should emit performance alerts when thresholds are breached', () => {
             const alerts: any[] = [];
-            analytics.onPerformanceAlert = (alert) => alerts.push(alert);
+            analytics.onPerformanceAlert = (alert: { metric: string; value: number; threshold: number; severity: 'low' | 'medium' | 'high' }) => alerts.push(alert);
             
             // Set high error rate to trigger alert
             analytics.updatePerformanceIndicators({
@@ -327,7 +329,7 @@ describe('UsageAnalytics', () => {
 
         test('should emit report generated event', () => {
             const events: any[] = [];
-            analytics.onReportGenerated = (report) => events.push(report);
+            analytics.onReportGenerated = (report: AnalyticsReport) => events.push(report);
             
             const report = analytics.generateReport('weekly');
             
@@ -360,7 +362,7 @@ describe('UsageAnalytics', () => {
         test('should filter suggestions by category', () => {
             const gasSuggestions = analytics.getOptimizationSuggestions('gas');
             
-            expect(gasSuggestions.every(s => s.category === 'gas')).toBe(true);
+            expect(gasSuggestions.every((s: OptimizationSuggestion) => s.category === 'gas')).toBe(true);
         });
 
         test('should implement optimization suggestion', () => {
@@ -370,14 +372,14 @@ describe('UsageAnalytics', () => {
                 analytics.implementOptimization(suggestionId);
                 
                 const updatedSuggestions = analytics.getOptimizationSuggestions();
-                const updatedSuggestion = updatedSuggestions.find(s => s.id === suggestionId);
+                const updatedSuggestion = updatedSuggestions.find((s: OptimizationSuggestion) => s.id === suggestionId);
                 expect(updatedSuggestion?.status).toBe('implemented');
             }
         });
 
         test('should emit optimization available events', () => {
             const events: any[] = [];
-            analytics.onOptimizationAvailable = (suggestions) => events.push(suggestions);
+            analytics.onOptimizationAvailable = (suggestions: OptimizationSuggestion[]) => events.push(suggestions);
             
             // Trigger performance update that might generate suggestions
             analytics.updatePerformanceIndicators({
@@ -613,7 +615,7 @@ describe('AnalyticsLib', () => {
             const cleaned = AnalyticsLib.cleanupOldData(data, 7); // Keep 7 days
             
             expect(cleaned).toHaveLength(2); // Only last 2 entries
-            expect(cleaned.every(item => item.timestamp >= now - (7 * 24 * 60 * 60 * 1000))).toBe(true);
+            expect(cleaned.every((item: any) => item.timestamp >= now - (7 * 24 * 60 * 60 * 1000))).toBe(true);
         });
     });
 });

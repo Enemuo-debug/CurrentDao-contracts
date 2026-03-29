@@ -14,7 +14,8 @@ import {
   PERMISSION_ADMIN,
   PERMISSION_MINT,
   PERMISSION_TRANSFER,
-  PERMISSION_EMERGENCY
+  PERMISSION_EMERGENCY,
+  PERMISSION_VIEW
 } from "../../contracts/security/interfaces/IAccessControl";
 
 describe("AccessControl", () => {

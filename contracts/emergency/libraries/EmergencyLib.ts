@@ -462,7 +462,7 @@ export class EmergencyLib {
     return typeof address === 'string' && 
            address.length > 0 && 
            address.length <= 42 &&
-           /^0x[a-fA-F0-9]*$/.test(address);
+           /^0x[a-fA-F0-9]+$/.test(address);
   }
 
   /**

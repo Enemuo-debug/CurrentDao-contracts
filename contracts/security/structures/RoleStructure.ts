@@ -228,7 +228,8 @@ export class RoleStructure {
    */
   public static validateHierarchy(): boolean {
     // Check for circular dependencies
-    for (const role of Object.values(Role)) {
+    const roles = [Role.ADMIN, Role.OPERATOR, Role.USER, Role.VIEWER];
+    for (const role of roles) {
       if (this.hasCircularDependency(role, new Set())) {
         return false;
       }

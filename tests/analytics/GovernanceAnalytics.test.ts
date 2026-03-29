@@ -34,12 +34,18 @@ describe('GovernanceAnalytics Tests', () => {
         const id = governance.propose(['0xT'], [0], ['0x'], 'Proposal 1', user1);
         analytics.trackProposal(id);
         
+        // Advance time to start voting
+        const realDateNow = Date.now;
+        Date.now = jest.fn(() => realDateNow() + 2000);
+        
         const weight = governance.castVote(id, 1, user2); // voter 2 has sqrt(500) votes
         analytics.recordVote(id, user2, 1, weight);
 
         const voterBehavior = analytics.getVoterBehavior(user2);
         expect(voterBehavior.voter).toBe(user2);
         expect(voterBehavior.proposalsVoted).toBe(1);
+        
+        Date.now = realDateNow;
     });
 
     it('should calculate DAO health engagement levels', () => {

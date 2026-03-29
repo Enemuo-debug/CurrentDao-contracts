@@ -12,7 +12,8 @@ import {
     VerificationStatus, 
     VerificationMethod,
     Coordinates,
-    ZoneRestrictions
+    ZoneRestrictions,
+    DistanceMethod
 } from '../../contracts/location/structures/LocationStructure';
 
 describe('LocationRegistry', () => {
@@ -631,22 +632,22 @@ describe('GeoLib', () => {
         const la: Coordinates = { latitude: 34.0522, longitude: -118.2437 };
 
         it('should calculate Haversine distance', () => {
-            const distance = GeoLib.calculateDistance(nyc, la, 'HAVERSINE');
+            const distance = GeoLib.calculateDistance(nyc, la, DistanceMethod.HAVERSINE);
             expect(distance).toBeCloseTo(3935.75, 1); // Approximately 3936 km
         });
 
         it('should calculate Euclidean distance', () => {
-            const distance = GeoLib.calculateDistance(nyc, la, 'EUCLIDEAN');
+            const distance = GeoLib.calculateDistance(nyc, la, DistanceMethod.EUCLIDEAN);
             expect(distance).toBeGreaterThan(0);
         });
 
         it('should calculate Manhattan distance', () => {
-            const distance = GeoLib.calculateDistance(nyc, la, 'MANHATTAN');
+            const distance = GeoLib.calculateDistance(nyc, la, DistanceMethod.MANHATTAN);
             expect(distance).toBeGreaterThan(0);
         });
 
         it('should use Haversine as default method', () => {
-            const haversineDistance = GeoLib.calculateDistance(nyc, la, 'HAVERSINE');
+            const haversineDistance = GeoLib.calculateDistance(nyc, la, DistanceMethod.HAVERSINE);
             const defaultDistance = GeoLib.calculateDistance(nyc, la);
             expect(haversineDistance).toBe(defaultDistance);
         });

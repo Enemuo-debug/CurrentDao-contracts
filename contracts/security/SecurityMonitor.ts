@@ -109,7 +109,7 @@ export class SecurityMonitor implements ISecurityMonitor {
     );
 
     // Anomaly detection
-    const anomalyResult = this.detectAnomalies(actor, 3600000); // 1 hour window
+    const anomalyResult = await this.detectAnomalies(actor, 3600000); // 1 hour window
 
     // Compliance check
     const context = new ComplianceContext(

@@ -55,7 +55,7 @@ describe('Security System Integration', () => {
       );
 
       expect(certificateAudit).toBeDefined();
-      expect(certificateAudit.result).toBe(true);
+      expect(certificateAudit!.result).toBe(true);
     });
 
     test('should detect suspicious certificate minting patterns', async () => {
@@ -121,7 +121,7 @@ describe('Security System Integration', () => {
       );
 
       expect(transferAudit).toBeDefined();
-      expect(transferAudit.result).toBe(true);
+      expect(transferAudit!.result).toBe(true);
     });
 
     test('should block transfers to blacklisted addresses', async () => {
@@ -172,7 +172,7 @@ describe('Security System Integration', () => {
       );
 
       expect(roleAudit).toBeDefined();
-      expect(roleAudit.result).toBe(true);
+      expect(roleAudit!.result).toBe(true);
     });
 
     test('should detect privilege escalation attempts', async () => {
